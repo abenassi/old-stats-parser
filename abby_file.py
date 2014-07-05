@@ -5,21 +5,25 @@ from openpyxl import load_workbook, Workbook
 import re
 
 # DATA
-ABBY_FILE_NAME = "ABBY file.xlsx"
+ABBY_FILE_NAME = "abby_file.xlsx"
 
 
 # ROW PARSERS
 class BaseParser():
 
-    def __init__(self, row, context):
+    def __init__(self, row=None, context=None):
         self.context = context
         self.row = row
         self.errors = [None]
 
+    # @classmethod
     def accepts(self, row):
         """metodo que acepta una row en base a 3 condiciones.
         Si se proporciona el parametro para la condicion, esta
         se evalua. Si no, se asume como verdadera"""
+
+        # carga los parametros de las condiciones en los objetos derivados
+        self.load_conditions()
 
         # substring contained condition
         if self.id_string:
@@ -55,13 +59,16 @@ class BaseParser():
 
 class TitleParser(BaseParser):
 
-    def __init__(self):
+    def load_conditions(self):
         self.id_string = u"T\xcdTULO"
         self.row_length = 1
+        self.row_pattern = None
 
     def parse(self):
         self.context.nroTitulo = self._get_nroTitulo()
-        self.context.nroTitulo = self._get_descTitulo()
+        self.context.descTitulo = self._get_descTitulo()
+
+        # declara cual fue el ultimo row type procesado
         self.context.typeRow = "title"
 
     def _get_nroTitulo(self):
@@ -84,13 +91,17 @@ class TitleParser(BaseParser):
 
 class Subt1Parser(BaseParser):
 
-    def __init__(self):
+    def load_conditions(self):
+        self.id_string = None
         self.row_length = 1
         self.row_pattern = "^[a-z][)][A-Z\s]{1,}"
 
     def parse(self):
         self.context.letraSubTitulo1 = self._get_letraSubTitulo1()
         self.context.descSubTitulo1 = self._get_descSubTitulo1()
+
+        # declara cual fue el ultimo row type procesado
+        self.context.typeRow = "subt1"
 
     def _get_letraSubTitulo1(self):
 
@@ -112,13 +123,17 @@ class Subt1Parser(BaseParser):
 
 class Subt2Parser(BaseParser):
 
-    def __init__(self):
+    def load_conditions(self):
+        self.id_string = None
         self.row_length = 1
         self.row_pattern = "^[0-9][\.]"
 
     def parse(self):
         self.context.nroSubTitulo2 = self._get_nroSubTitulo2()
         self.context.descSubTitulo2 = self._get_descSubTitulo2()
+
+        # declara cual fue el ultimo row type procesado
+        self.context.typeRow = "subt2"
 
     def _get_nroSubTitulo2(self):
 
@@ -141,14 +156,15 @@ class Subt2Parser(BaseParser):
 
 class AgValuesParser(BaseParser):
 
-    def __init__(self):
+    def load_conditions(self):
         self.id_string = u"Valor total:"
         self.row_length = 1
+        self.row_pattern = None
 
     def parse(self):
 
         # si la ultima row fue un titulo, pone en None los subtitulos
-        if self.context.typeLastRow == "title":
+        if self.context.typeRow == "title":
 
             # Primer Subtitulo
             self.context.letraSubTitulo1 = 0
@@ -159,7 +175,7 @@ class AgValuesParser(BaseParser):
             self.context.descSubTitulo2 = "Todos"
 
         # si la ultima row fue un titulo, pone en None el subt2
-        if self.context.typeLastRow == "subt1":
+        if self.context.typeRow == "subt1":
 
             # Segundo Subtitulo
             self.context.nroSubTitulo2 = 0
@@ -179,6 +195,10 @@ class AgValuesParser(BaseParser):
         # datos de la tabla que se tienen
         self.context.year = self._get_year()
         self.context.value = self._get_value()
+
+        # declara cual fue el ultimo row type procesado
+        self.context.typeRow = "agValues"
+
 
     def _get_year(self):
         RV = []
@@ -223,7 +243,7 @@ class AgValuesParser(BaseParser):
 
 class Head1Parser(BaseParser):
 
-    def __init__(self):
+    def load_conditions(self):
         self.id_string = "Tarifa"
         self.row_length = 1
         self.row_pattern = "^[0-9].{1,}Tarifa.{1,}:"
@@ -235,6 +255,9 @@ class Head1Parser(BaseParser):
         self.context.nroTarifa = self._get_nroTarifa()
         self.context.descProducto = self._get_descProducto()
         self.context.unidadProducto = self._get_unidadProducto()
+
+        # declara cual fue el ultimo row type procesado
+        self.context.typeRow = "tblHead1"
 
     def _get_nroProducto(self):
 
@@ -339,15 +362,18 @@ class Head1Parser(BaseParser):
 
 class Head2Parser(BaseParser):
 
-    def __init__(self):
+    def load_conditions(self):
+        self.id_string = None
         self.row_length = 1
         self.row_pattern = "^[0-9].{1,}:"
 
 
 class TblRowParser(BaseParser):
 
-    def __init__(self):
+    def load_conditions(self):
+        self.id_string = None
         self.row_length = 5
+        self.row_pattern = None
 
     def parse(self):
 
@@ -357,6 +383,9 @@ class TblRowParser(BaseParser):
         self.context.year = self._get_year()
         self.context.cantidad = self._get_cantidad()
         self.context.value = self._get_value()
+
+        # declara cual fue el ultimo row type procesado
+        self.context.typeRow = "tblRow"
 
     def _get_descPais(self):
 
@@ -418,9 +447,14 @@ class TblRowParser(BaseParser):
 
 class IgnoreRow(BaseParser):
 
+    # @classmethod
     def accepts(self, row):
         """pisa el metodo base, chequea condiciones especiales
         para las rows que deben ser ignoradas"""
+
+        # si la row es None en su primer celda, se ignora
+        if (not row) or (not row[0]):
+            return True
 
         # chequea si la row es una continuacion de tabla partida
         continuation_row = u"(Conclusi\xf3n)" in row[0]
@@ -431,14 +465,17 @@ class IgnoreRow(BaseParser):
         return continuation_row or empty_row
 
     def parse(self):
-        pass
+
+        # declara cual fue el ultimo row type procesado
+        self.context.typeRow = "ignore"
 
 
 class NoneImportParser(BaseParser):
 
-    def __init__(self):
+    def load_conditions(self):
         self.id_string = u"Sin importaci\xf3n"
         self.row_length = 1
+        self.row_pattern = None
 
     def parse(self):
 
@@ -449,10 +486,13 @@ class NoneImportParser(BaseParser):
         self.context.cantidad = [u"NA", u"NA"]
         self.context.value = [u"NA", u"NA"]
 
+        # declara cual fue el ultimo row type procesado
+        self.context.typeRow = "noneImport"
 
 class Head1IniPart(BaseParser):
 
-    def __init__(self):
+    def load_conditions(self):
+        self.id_string = None
         self.row_length = 1
         self.row_pattern = "^[0-9].{1,}Tarifa.{1,}"
 
@@ -462,10 +502,14 @@ class Head1IniPart(BaseParser):
 
         self.context.lastRow = self.row[0]
 
+        # declara cual fue el ultimo row type procesado
+        self.context.typeRow = "tblHead1IniPart"
+
 
 class Head1FinalPart(BaseParser):
 
-    def __init__(self):
+    def load_conditions(self):
+        self.id_string = None
         self.row_length = 1
         self.row_pattern = ".{1,}:"
 
@@ -476,13 +520,17 @@ class Head1FinalPart(BaseParser):
         # forma la row completa de tipo Head1
         tblHead1Row = [get_unicode(self.context.lastRow +
                        u" " + self.row[0])]
+        tblHead1Row = [tblHead1Row[0].strip()]
 
         # chequea que sea aceptada, y usa el parser de Head1
-        if Head1Parser.accepts(tblHead1Row):
+        if Head1Parser().accepts(tblHead1Row):
             Head1Parser(tblHead1Row, self.context).parse()
         else:
+            print tblHead1Row
             print "Ocurrio un error con un Head1Parser partido!"
 
+        # declara cual fue el ultimo row type procesado
+        self.context.typeRow = "tblHead1FinalPart"
 
 # INTERNAL CLASSES
 class Anuario1Context():
@@ -535,11 +583,11 @@ class AbbyParser():
 
         # recorre los parsers a ver si alguno acepta la row
         for parserClass in self.parsers:
-            if parserClass.accepts(row):
-
+            if parserClass().accepts(row):
+                # print str(parserClass), row
                 # parsea la row y modifica el contexto con el resultado
-                parser = parserClass()
-                parser.parse(row, self.context)
+                parser = parserClass(row, self.context)
+                parser.parse()
                 break
 
         # FALTA IMPLEMENTAR CUANDO NO SE RECONOCE EL TIPO!!!
@@ -563,7 +611,7 @@ class AbbyParser():
                 self.context.typeRow == "tblRow":
 
             i = 0
-            for value in self.value:
+            for value in self.context.value:
 
                 newRecord = dict()
 
@@ -597,7 +645,7 @@ class AbbyParser():
                 i += 1
 
         # actualiza el ultimo tipo de row tratado
-        self.context.typeLastRow = str(self.context.typeRow)
+        self.context.typeRow = str(self.context.typeRow)
 
         return newRecords
 
@@ -606,11 +654,29 @@ class AbbyParser():
 class AbbyFile():
 
     # DATA
-    PARSERS = [NoneImportParser, Head1FinalPart, TblRowParser,
-               Head1Parser, Head1IniPart, Head2Parser, TitleParser,
-               AgValuesParser, Subt1Parser, Subt2Parser, IgnoreRow]
+    PARSERS = [IgnoreRow, NoneImportParser, Head1Parser,
+               Head1IniPart,
+               AgValuesParser, Head1FinalPart,
+               TblRowParser, Head2Parser,
+               TitleParser, Subt1Parser, Subt2Parser]
 
     CONTEXTS = [Anuario1Context]
+
+    FIELDS = ["nroTitulo",
+              "descTitulo",
+              "letraSubTitulo1",
+              "descSubTitulo1",
+              "nroSubTitulo2",
+              "descSubTitulo2",
+              "nroProducto",
+              "nroTarifa",
+              "descProducto",
+              "unidadProducto",
+              "idPais",
+              "descPais",
+              "year",
+              "cantidad",
+              "value"]
 
     def __init__(self, wb):
         self.wb = wb
@@ -636,15 +702,15 @@ class AbbyFile():
                 # agrega value de la celda a la lista de la row
                 values_list.append(get_unicode(cell.internal_value))
 
-            # si la lista no esta vacia procede a agregarla al contenido
+            # si la lista no esta vacia, la parsea
             if not self._empty(values_list):
 
                 # elimina todas las celdas vacias del final de la lista
                 values_list = self._remove_lasts_none(values_list)
-
+                # print values_list
                 # extrae los records que se pueda a partir de la row pasada
                 record_lines = ap.parse_row(values_list)
-
+                # print record_lines
                 # devuelve de a uno cada record nuevo conseguido a medida
                 # que se generan nuevos records con las rows leidas del excel
                 for record in record_lines:
@@ -674,11 +740,18 @@ class AbbyFile():
 
 
 # USER METHODS
-def write_ws(ws):
+def write_ws(ws, record, fields):
     """recibe una hoja de excel vacia o que ya tiene algunos
     registros y debe agregar un nuevo registro"""
 
-    pass
+    new_row = []
+    # print record
+    # agrega en orden los valores segun el field al que pertenecen
+    for field in fields:
+        new_row.append(record[field])
+
+    # agrega la nueva row al excel
+    ws.append(new_row)
 
 
 def scrape_abby1File(wb_abby_name=None):
@@ -695,15 +768,18 @@ def scrape_abby1File(wb_abby_name=None):
     abby_file = AbbyFile(wb_abby)
 
     # creo una hoja de excel para ir guardando el output
-    wb_parsed = Workbook()
-    ws_parsed = wb_parsed.get_active_sheet()
+    wb_parsed = Workbook(optimized_write=True)
+    ws_parsed = wb_parsed.create_sheet()
+
+    # copio los encabezados
+    ws_parsed.append(abby_file.FIELDS)
 
     # reescribe cada record en un nuevo excel con formato de base de datos
     for record in abby_file.get_records():
-        write_ws(ws_parsed, record)
+        write_ws(ws_parsed, record, abby_file.FIELDS)
 
     # guarda el excel terminado
-    wb_parsed.save("ABBY parsed.xlsx")
+    wb_parsed.save("ABBY parsed refactored.xlsx")
 
     return abby_file
 
@@ -715,6 +791,7 @@ def scrape_abby1File(wb_abby_name=None):
     3. Implementar algun tipo de registro y reporte de errores
     4. Implementar alguna logica "anti-abby-errors" para los
     valores numericos en donde se cuela alguna letra
+    5. Implementar homogeneizacion de nombres de paises
 """
 
 
