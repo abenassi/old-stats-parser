@@ -25,7 +25,7 @@ github clone url. From command line type:
 pip install git+https://github.com/abenassi/old_stats_parser.git
 ```
 
-To upgrade the packages if you have already installed it:
+To upgrade the package if you have already installed it:
 
 ```
 pip install git+https://github.com/abenassi/old_stats_parser.git --upgrade
