@@ -18,7 +18,7 @@ Excel files
 How to use it
 -------------
 
-1. You can import abby_file module and call main function with or without
+1- You can import abby_file module and call main function with or without
 input/ouput file names. If they are not provided, defaults are used.
 
 ```python
@@ -26,7 +26,9 @@ import abby_file
 abby_file.scrape_abby_file("abby_file.xlsx", "abby_parsed.xlsx")
 ```
 
-2. You can run abby_file directly. Optionally you can pass paremeters for
+2- You can run abby_file directly. Optionally you can pass paremeters for
 input/output file names.
 
-    python abby_file.py abby_file.xlsx abby_parsed.xlsx
+```
+python abby_file.py abby_file.xlsx abby_parsed.xlsx
+```
