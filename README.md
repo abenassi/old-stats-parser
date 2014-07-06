@@ -1,10 +1,9 @@
 old-stats-parser
 ================
 
-It takes ABBY (ocr software) output from analyzing scanned old statistics
-books and transform it in an excel spreadsheet formatted like a database.
+Takes ABBY ocr software output from analyzing scanned old statistics books and transform it in an excel spreadsheet formatted like a database.
 
-Up to know, it can process only a certain type of argentinian old stats book.
+Up to now, it can process only a certain type of argentinian old stats book.
 
 The idea is to expand functionality to be able to process more kinds of stat
 books and thus liberate them from their physical trap :)
