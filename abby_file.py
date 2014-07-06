@@ -503,7 +503,7 @@ class TblRowParser(BaseParser):
         """For this document, years are always 1945 and 1946. This will change
         for any other document."""
 
-        RV = [u"1945", u"1946"]
+        RV = [1945, 1946]
 
         return RV
 
@@ -633,7 +633,7 @@ class Head1FinalPart(BaseParser):
         tbl_head1_row = [tbl_head1_row[0].strip()]
 
         # check that row is accepted and use parser
-        if Head1Parser().accepts(tbl_head1_row):
+        if Head1Parser(tbl_head1_row).accepts():
             Head1Parser(tbl_head1_row, self.context).parse()
         # if not accepted, print an error
         else:
