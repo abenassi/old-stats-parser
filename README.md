@@ -29,4 +29,4 @@ abby_file.scrape_abby_file("abby_file.xlsx", "abby_parsed.xlsx")
 2. You can run abby_file directly. Optionally you can pass paremeters for
 input/output file names.
 
-python abby_file.py "abby_file.xlsx" "abby_parsed.xlsx"
+    python abby_file.py abby_file.xlsx abby_parsed.xlsx
