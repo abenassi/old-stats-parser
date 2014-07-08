@@ -5,6 +5,18 @@ from kitchen.text.converters import to_unicode
 from openpyxl import Workbook
 
 
+def write_ws(ws, record, fields):
+    """Add a record to a worksheet."""
+    new_row = []
+
+    # extract data with field keys from record
+    for field in fields:
+        new_row.append(record[field])
+
+    # add new row to worksheet
+    ws.append(new_row)
+
+
 def convert_to_float(strValue):
     strValue = strValue.strip().replace(".", "").replace(",", ".")
     floatValue = float(strValue)
