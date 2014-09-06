@@ -133,7 +133,7 @@ FIELDS = ["id_title",
           "value"]
 
 
-# USER METHODS
+
 def scrape_abby_file(wb_abby_name=None, wb_abby_parsed_name=None):
     """Takes an abby output excel file and returns a database formatted excel
     file with records built from it."""
