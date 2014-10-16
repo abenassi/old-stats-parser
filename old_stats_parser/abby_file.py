@@ -9,6 +9,7 @@ import stats_book_1
 
 # INTERNAL CLASSES
 class AbbyParser():
+
     """Parse rows of ABBY output and build records from them.
 
     AbbyParser object needs a list of parsers and a context to be built.
@@ -41,6 +42,7 @@ class AbbyParser():
 
 # USER CLASSES
 class AbbyFile():
+
     """Takes a workbook with a single sheet that is ABBY ocr output from an old
     stats book. Parse all rows of the worksheet building database records.
 
@@ -112,9 +114,9 @@ ABBY_FILE_NAME = "abby_file.xlsx"
 ABBY_PARSED_FILE_NAME = "abby_parsed.xlsx"
 
 PARSERS = [parsers.IgnoreRow, parsers.NoneImportParser, parsers.Head1Parser,
-           parsers.Head1IniPart, parsers.AgValuesParser, parsers.Head1FinalPart,
-           parsers.TblRowParser, parsers.Head2Parser, parsers.TitleParser,
-           parsers.Subt1Parser, parsers.Subt2Parser]
+           parsers.Head1IniPart, parsers.AgValuesParser,
+           parsers.Head1FinalPart, parsers.TblRowParser, parsers.Head2Parser,
+           parsers.TitleParser, parsers.Subt1Parser, parsers.Subt2Parser]
 
 FIELDS = ["id_title",
           "desc_title",
@@ -131,7 +133,6 @@ FIELDS = ["id_title",
           "year",
           "quantity",
           "value"]
-
 
 
 def scrape_abby_file(wb_abby_name=None, wb_abby_parsed_name=None):
@@ -176,8 +177,3 @@ if __name__ == '__main__':
 
     # main call
     scrape_abby_file(input_file, output_file)
-
-
-
-
-
